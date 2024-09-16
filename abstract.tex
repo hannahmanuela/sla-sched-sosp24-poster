@@ -1,0 +1,39 @@
+\begin{abstract}
+
+    The way developers currently communicate their resource needs to platforms
+    hosting their computation leaves much to be desired.
+    
+    Jobs are divided in latency critical and best effort, a forced binary that
+    not all work fits cleanly into. 
+
+    For latency critical work, reservations systems encode their resource needs.
+    Many systems were created to make these initially rigid reservations more
+    dynamic in order to match the dynamic needs of workloads, but these
+    generally operate on a much larger timescale than the fluctuations in
+    requests, which can be on an order as small as hundreds of milliseconds. 
+
+    This work eschews reservation-based schemes as a fundamtally flawed way of
+    communicating what developers actually care about: deadlines. Missed
+    deadlines are the reason that engineers are paged at 3am.
+
+    Ideally developers would be able to simply submit the code to be run and
+    attach a deadline, and know that each time the job is invoked it will finish
+    within that deadline.
+
+    In order to continue to be able to continue to provide concrete guarantees
+    about what resources will be made available, this work asks developers to
+    provide a maximum execution time. The guarantee of the provider is then that
+    the job will get that time available to it within the deadline.
+    % how is this different from just doing a reservation per invocation?
+    % i guess it sort of is, except you're not just saying I'll need 30 seconds of a core, you're also giving it a deadline
+
+
+    Having a concrete deadline allows the scheduler on the single machine to
+    utilize the optimal Earliest Deadline First scheduling paradigm. 
+    
+    Having a known minimum amount of slack allows a pessimistic admission
+    control to ensure that guarantees can be met while still colocating jobs.
+    And a reactive distributed load balancer places load opportunistically when
+    jobs do finish before the maximum execution time has been reached.
+
+\end{abstract}

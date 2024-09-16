@@ -1,0 +1,45 @@
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+
+
+There is a fundamental mismatch between what developers care about (latencies)
+and what they are required to give providers (resource reservations). Developers
+use Service Level Objectives (SLOs) between teams and Service Level Agreements
+(SLAs) towards customers, each which represent promises about maximal latencies
+of the API that team/company is in charge of (add citations). The translation to
+a reservation system then happens offline, and requires the developer to make
+estimations about peak load.  It also incentivizes them to overestimate - low
+utilization is much less of a problem than missing deadlines. 
+
+This in turn poses a problem for providers, for whom high utilization means more
+work they are able to run and thus more money. Bin-packing latency critical
+work, as well as scheduling in best effort work opportunistically to use
+resources guaranteed to latency critical jobs in time that they might not be
+using it, is a hard problem that many systems work on.
+
+What this work tries to do is avoid the problem alltogether. Rather than deal
+with the lossy metric of reservations and the false binary of latency critcial
+and best effort, this project attempts to create a spectrum of work, each job
+being characterized by a deadline and a maximum compute time.
+
+Work is submitted as a handler function, basically a binary. Attached is
+metadata that includes the maximum execution time as well as a deadline. When a
+request for this handler comes in, it is initially routed to the relevant shard
+of a global scheduler. Depending on the amount of slack (difference between
+deadline and max compute) the global scheduler will either immediately place the
+job, or will probe a dynamic number of machines in order to find a good match.
+Each machine has a dispatcher, which is in communication with a shard of the
+global scheduler. The dispatcher accepts and runs work, as well as doing
+back-of-the-envelope computation when probed about whether a new job would fit. 
+
+The admission control is pessismistc, and assumes that every process will use
+the maximum compute time. The dispatcher looks at the amount of slack each
+process has (given the original slack and how much time it has already spent
+waiting), and then judges whether a new process would still allow it to meet all
+the max compute guarantees. Once admitted to a machine, work is run using an
+approximation of Earliest Deadline First scheduling. This is acheived via a
+slight abuse of linux' new scheduling algorithm, EEVDF. It also required editing
+linux in a small way to make its behavior closer to the original paper (from
+which the linux implementation diverges in meaningful ways). 
+

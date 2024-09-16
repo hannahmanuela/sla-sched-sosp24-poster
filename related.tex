@@ -1,3 +1,16 @@
 \section{Related Work}
 
+Categories of related work: 
+
+- work that focuses on elasticity (ie don't need reservations, just look and adapt) --> will generally be on a different time scale than what we are targeting
+- work that focuses on increasing utilization (caladan) --> still deals with fundamental issues of binary work categorization (eg can't help you if you under-reserved, or if there isn't enough BE)
+- work that is deadline-based
+    - pretty formal (Jockey)
+    - infer the deadline themselves, generate recurring reservations (Morpheus)
+    - generate deadlines from SLAs (Rayon)
+
+- key ways we are generally different:
+    - EDF on the single machine, combined with the associated admission control
+    - slack as an explicit metric that is used on the global level
+    - are deadline-based but have guarantees
 

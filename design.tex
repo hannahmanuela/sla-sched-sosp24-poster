@@ -6,28 +6,54 @@ Our design is broadly split into two categories: a distributed global scheduler,
 and a single machine world that includes both a dispatcher and a scheduler. 
 
 
+\subsection*{Distributed Global Scheduler}
+
+The global scheduler shard is responsible for a set of handlers, and has
+available to it a set of machines to run handlers on. The goal of the global
+scheduler is to keep load as evenly distributed among the machines as possible,
+and what this means for us is to keep a maximally heterogenous set of deadlines
+and computes on each machine. This allows processes with longer deadlines and
+more slack to fill in gaps where shorter processes might have finished earlier
+than expected (similarly to how best effort work now opportunistically uses
+resources not currently used by latency critical tasks).
+
+This part of the design is not as fleshed out, but with the added information of
+the slack and the deadline, as well as the admission control for each machine,
+we can vary the amount of probing done for each job to accomodate how long of a
+wait the job can handle.
+
 
 \subsection*{Single machine}
 
-Each machine has running on it a dispatcher thread. The dispatcher handles
-communication with the global scheduler, and keeps track of jobs currently
-executing on the machine. In order to check whether a new job would fit on the
-machine, the dispatcher looks at the slack of each process currently on the
-machine, as well as their deadlines. Because the scheduling is earliest deadline
-first, the dispatcher can easily understand how much slack is required of each
-job by looking at the maximum compute left on all the jobs with earlier
-deadlines. 
 
-All the other cores run jobs. The EDF scheduling for these is implemented by
-slightly absuing EEVDF, linux' new scheduling policy. In EEVDF, processes make
-requests for resources, and each request is assigned an eligible time and a
-deadline, and is guaranteed the requested resource within the deadline. At every
-scheduling point, of the eligible processes the one with the earliest deadline
-is chosen to run next. 
+On the individual machines, the goal is to simply to meet all the deadlines of
+the work assigned to the machine. This has two parts: one is a scheduler that
+prioritizes work by deadline; and the other is a dispatcher thread, which
+handles communication with its global scheduler shard and monitors the work
+currently on the machine, ensuring that hitting all the deadlines is possible. 
+
+In order to check whether a new job would fit on the machine, the dispatcher
+looks at the slack of each process currently on the machine, as well as their
+deadlines. Because the scheduling is Earliest Deadline First (EDF), the
+dispatcher can easily understand how much slack is required of each job by
+looking at the maximum compute left on all the jobs with earlier deadlines. 
+
+
+The scheduler for the work is trying to approximate EDF, which is proven to be
+optimal at meeting deadlines (ie if a schedule exists that allows all jobs to
+meet their deadline, EDF will find it). We are able to acheive EDF scheduling by
+absuing EEVDF, linux' new scheduling policy.
+
+In EEVDF, processes make requests for resources, and each request is assigned an
+eligible time and a deadline, and is guaranteed the requested resource within
+the deadline. At every scheduling point, of the eligible processes the one with
+the earliest deadline is chosen to run next. 
 
 The eligible time exists in order to maintain fairness. If a process just got
-time on the cpu, its next eligible time will be set to be in the future. This
-protects against starvation of processes with longer deadlines.
+time on the cpu, its next eligible time will be set to be in the future (a
+weighted estimation of by when it should have gotten the time it just did, based
+on its weight as well the the total system load). This protects against
+starvation of processes with longer deadlines.
 
 If jobs make requests often and for small time increments, this policy is
 similar to PS - each process runs for a scheduling quanta before becoming
@@ -37,6 +63,8 @@ need, then the deadline is set once and never changes. This is in fact what the
 dispatcher does - when it spawns a process for a new job, it sets the requested
 timeslice of that job to be the jobs maximum compute. 
 
+\hmng{not sure if this next paragraph isn't too nitty, but if I don't have it kind 
+of all I've done is explain how it works, ie nothing that I actually had to do}
 The way linux had implemented EEVDF differed slightly from the paper: rather
 than having a request-based eligibility, processes' eligiblity was solely a
 function of how much time they had gotten compared to other processes. What this
@@ -48,23 +76,3 @@ regardless of what the respective deadlines were.
 
 Going back to the original behavior delineated in the paper required introducing
 the notion of eligible times in the linux scheduler. 
-
-
-
-\subsection*{Distributed Global Scheduler}
-
-The global scheduler is sharded over the handlers as well as the machines: each
-shard is responsible for a set of handlers, and has available to is a set of
-machines to run handlers on. The goal of the global scheduler is to keep load as
-evenly distributed among the machines as possible, and what this means for us is
-to keep a maximally heterogenous set of deadlines and computes on each machine.
-This allows processes with longer deadlines and more slack to fill in gaps where
-shorter processes might have finished earlier than expected (similarly to how
-best effort work now opportunistically uses resources not currently used by
-latency critical tasks).
-
-This part of the design is not as fleshed out, but with the added information of
-the slack and the deadline, as well as the admission control for each machine,
-we can vary the amount of probing done for each job to accomodate how long of a
-wait the job can handle.
-

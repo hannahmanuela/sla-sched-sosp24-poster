@@ -58,9 +58,10 @@ the maximum compute time. The dispatcher looks at the amount of slack each
 process has (given the original slack and how much time it has already spent
 waiting), and then judges whether a new process would still allow it to meet all
 the max compute guarantees. Once admitted to a machine, work is run using an
-approximation of Earliest Deadline First (EDF) scheduling. This is acheived via a
-slight abuse of linux' new scheduling algorithm, Earliest Eligible Virtual
-Deadline First (EEVDF). It also required editing linux in a small way to make
-its behavior closer to the original paper (from which the linux implementation
-diverges in meaningful ways).
+approximation of Earliest Deadline First (EDF) scheduling. This is acheived via
+a slight abuse of linux' new scheduling algorithm, Earliest Eligible Virtual
+Deadline First (EEVDF), originally proposed in the 90s and recently integrated
+as linux' scheduling algorithm for the normal scheduling class. It also required
+editing linux in a small way to make its behavior closer to the original paper
+(from which the linux implementation diverges in meaningful ways).
 

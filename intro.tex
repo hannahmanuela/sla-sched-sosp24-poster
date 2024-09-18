@@ -2,11 +2,11 @@
 \section{Introduction}
 %-------------------------------------------------------------------------------
 
-There is a fundamental mismatch between what developers care about (latencies)
-and what they are required to give providers (resource reservations). Developers
-use Service Level Objectives (SLOs) between teams and Service Level Agreements
-(SLAs) towards customers, each of which represent promises about maximal latencies
-of the API that team/company is in charge of (add citations). 
+There is a mismatch between what developers care about (latencies) and what they
+are required to give providers (resource reservations). Developers use Service
+Level Objectives (SLOs) between teams and Service Level Agreements (SLAs)
+towards customers, each of which represent promises about maximal latencies of
+the API that team/company is in charge of (add citations). 
 
 This mismatch is problematic on two levels: one is that the binary of
 latency-critical and best effort is a false dichotomy, and the other is that
@@ -14,23 +14,22 @@ translating latencies into reservations is difficult.
 
 Imagine a web developer, whose website has four different types of work it has
 to do: \\
-(1) load static pages (eg the homepage) - short and very time ciritcal \\
+(1) load static pages (eg the homepage) - shortest and very time ciritcal \\
 (2) load dynamic pages (eg a users profile page) - slightly longer and less time
 critcial \\
 (3) foreground data processing (eg processing a user uploaded file of image) -
-expected to take a bit, but should not run on forever \\
+require a fair amount of processing but is still user-facing and thus latency sensitive \\
 (4) background data processing (eg updating a data warehouse) - run overnight
 and just needs to finish by morning.
 
-The only real candidate for true best effort work is (4), and even that might be
-difficult because it's a problem if it's not done by the time business picks up
-the next day. For the other three, the translation to a reservation system then
-happens offline, and requires the developer to make estimations about peak load
-as well as how much they are willing to let latencies spike (for example, (3)
-might be fine to run a bit slower when load is high but (1) should remain
-completely impervious to load spikes). This estimation process also incentivizes
-the developer to overestimate - low utilization is much less of a problem to them than
-missing deadlines. 
+The only candidate for true best effort work is (4), and even that will pose a
+problem if it's not done by the time business picks up the next day. For the
+other three, the translation to a reservation system then happens offline, and
+requires the developer to make estimations about peak load as well as how much
+they are willing to let latencies spike (for example, (3) might be fine to run a
+bit slower when load is high but (1) should remain completely impervious to load
+spikes). This estimation process also incentivizes the developer to overestimate
+- low utilization is much less of a problem to them than missing deadlines. 
 
 This in turn poses a problem for providers, for whom high utilization means more
 work they are able to run and thus more money. Bin-packing latency critical
@@ -38,30 +37,9 @@ work, as well as scheduling in best effort work opportunistically to use
 resources guaranteed to latency critical jobs in time that they might not be
 using it, is a hard problem that many systems work on.
 
-What this work tries to do is avoid the problem alltogether. Rather than deal
-with the lossy metric of reservations and the false binary of latency critcial
-and best effort, this project attempts to create a spectrum of work, each job
-being characterized by a deadline and a maximum compute time.
-
-Work is submitted as a handler function, basically a binary. Attached is
-metadata that includes the maximum execution time as well as a deadline. When a
-request for this handler comes in, it is initially routed to the relevant shard
-of a global scheduler. Depending on the amount of slack (difference between
-deadline and max compute) the global scheduler will either immediately place the
-job, or will probe a dynamic number of machines in order to find a good match.
-Each machine has a dispatcher, which is in communication with a shard of the
-global scheduler. The dispatcher accepts and runs work, as well as doing
-back-of-the-envelope computation when probed about whether a new job would fit. 
-
-The admission control is pessismistc, and assumes that every process will use
-the maximum compute time. The dispatcher looks at the amount of slack each
-process has (given the original slack and how much time it has already spent
-waiting), and then judges whether a new process would still allow it to meet all
-the max compute guarantees. Once admitted to a machine, work is run using an
-approximation of Earliest Deadline First (EDF) scheduling. This is acheived via
-a slight abuse of linux' new scheduling algorithm, Earliest Eligible Virtual
-Deadline First (EEVDF), originally proposed in the 90s and recently integrated
-as linux' scheduling algorithm for the normal scheduling class. It also required
-editing linux in a small way to make its behavior closer to the original paper
-(from which the linux implementation diverges in meaningful ways).
-
+This submission presents \textit{\sysname}, a SLA-based scheduling system that
+avoids the problem alltogether. Rather than deal with the lossy metric of
+reservations and the false binary of latency critcial and best effort,
+\sysname{} creates a spectrum of criticality. It does this by making deadline
+and maximum compute time the central scheduling mechanism.\hmng{don't love this
+sentence yet, I'd like to bring it to a point but this isn't quite it}

@@ -1,0 +1,27 @@
+%-------------------------------------------------------------------------------
+\section{Current State}
+%-------------------------------------------------------------------------------
+
+Implementing the above design required changing linux slightly. Linux has a
+strong tenant of avoiding unfairness, and as a result implements eligibility
+solely as a function of how much time a process had gotten compared to other
+processes. This means that (assuming equally weighted processes), after a tick
+of running, a process becomes ineligible, because it got more time that it
+should have (in an ideal system the tick would have been shared equally among
+all processes).
+
+In \sysname, however, being able to be unfair for long periods of time is key:
+jobs with short deadlines need to get absolute priority over jobs that have
+later deadlines.
+
+We create a dummy application that follows the scheme of the website: four
+different types of jobs, with deadlines ranging from 15ms to 6s, and maximum
+computes from 12ms to 4s. Figure \ref{fig:graph} shows the results on a single
+machine, with and without the change to linux. 
+
+The three points above the 100$\%$ latency line in subfigure~\ref{fig:graph:new}
+are anomalies that should not exist - in a pessimistic admission control setting
+all jobs should finish on time. We traced the issue back to how linux deals with
+dequeueing processes with large amounts of lag, and are currently working on
+acheiving the desired behavior (processes with the smallest deadline always run
+first).

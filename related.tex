@@ -1,16 +1,24 @@
 \section{Related Work}
 
-Categories of related work: 
+Other systems have tried to address the same problem in different ways. 
 
-- work that focuses on elasticity (ie don't need reservations, just look and adapt) --> will generally be on a different time scale than what we are targeting
-- work that focuses on increasing utilization (caladan) --> still deals with fundamental issues of binary work categorization (eg can't help you if you under-reserved, or if there isn't enough BE)
-- work that is deadline-based
-    - pretty formal (Jockey)
-    - infer the deadline themselves, generate recurring reservations (Morpheus)
-    - generate deadlines from SLAs (Rayon)
+There is a large body of work that focusses on removing the need for
+reservations by creating elastic reservations that automatically scale up and
+down with load (TODO citations - pigeon, sparrow, kubernetes?). These systems
+generally operate on a much larger timescale (control loops on the order of
+manys seconds (TODO citation)), and still work within the best effort - latency
+critical binary. 
 
-- key ways we are generally different:
-    - EDF on the single machine, combined with the associated admission control
-    - slack as an explicit metric that is used on the global level
-    - are deadline-based but have guarantees
+There are systems that focus on increasing utilization so that resources
+temporarily unused by latency crticial jobs can be repurposed by best effort
+work (TODO cite caladan, also shinjuku?). This alleviates the symptom of
+over-subscription, under utilization, without addressing the root cause. It too
+works within the best effort - latency critical binary. 
+
+There are systems that are purely deadline-based, but take different appproach
+to realizing those deadlines. Some try to formally pre-compute compute time to
+make guarantees (TODO cite Jockey), while others use the deadline to generate a
+reservation (TODO cite Rayon). Morpheus (TODO add citation) targets jobs with
+invocation frequencies of around a day, and infers the deadline from historic
+data, automatically generating recurring reservations.
 

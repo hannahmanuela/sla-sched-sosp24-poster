@@ -2,53 +2,83 @@
 \section{Design}
 %-------------------------------------------------------------------------------
 
-Our design is broadly split into two categories: a distributed global scheduler,
-and a single machine world that includes both a dispatcher and a scheduler. 
+\begin{figure}[t!]
+    \centering
+    \includegraphics[height=1.5in]{img/eevdf.png}
+    \caption{An example EEVDF timeline. Arrows represent requests, denoted with time eligible and deadline, 
+        and boxes showing which process is chosen to run. }
+    \label{eevdf}
+\end{figure}
+
+\begin{figure*}[h!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=2in]{img/old_lnx__2ms_wait__10K_iter.png}
+        \caption{Latency and utilization in original linux}
+    \end{subfigure}%
+    \hfill
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=2in]{img/new_lnx__2ms_wait__10K_iter.png}
+        \caption{Latency and utilization in modified linux}
+        \label{fig:graph:new}
+    \end{subfigure}
+    \vspace{10pt}
+    \caption{Results of running the same workload on (a) unmodified and (b) modified linux.}
+    \label{fig:graph}
+\end{figure*}
+
+Developers submit jobs, attached with the maximum execution time as well as a
+deadline. 
+
+When a job is run, it is initially routed to the relevant shard of the
+\textit{global scheduler} \ref{DGS}, which then forwards the job to a chosen
+single machine \ref{SM}. 
 
 
 \subsection*{Distributed Global Scheduler}
+\label{DGS}
 
-The global scheduler shard is responsible for a set of handlers, and has
-available to it a set of machines to run handlers on. The goal of the global
-scheduler is to keep load as evenly distributed among the machines as possible,
-and what this means for us is to keep a maximally heterogenous set of deadlines
-and computes on each machine. This allows processes with longer deadlines and
-more slack to fill in gaps where shorter processes might have finished earlier
-than expected (similarly to how best effort work now opportunistically uses
-resources not currently used by latency critical tasks).
+Each global scheduler shard has a set of machines that it can run jobs on. The
+goal of the global scheduler is to keep load as evenly distributed among these
+machines as possible, in the sense that each machine has a maximally
+heterogenous set of deadlines and computes. This allows processes with more
+\textit{slack} (difference between deadline and max compute) to fill in gaps
+where shorter processes might have finished earlier than expected (similarly to
+how best effort work now opportunistically uses resources not currently used by
+latency critical tasks).
 
-This part of the design is not as fleshed out, but with the added information of
-the slack and the deadline, as well as the admission control for each machine,
-we can vary the amount of probing done for each job to accomodate how long of a
-wait the job can handle.
+Depending on the amount of slack the global scheduler will either immediately
+place the job, or will probe a dynamic number of machines in order to find a
+good match.
 
 
 \subsection*{Single machine}
+\label{SM}
+
+On the individual machines, the goal is to to meet all the deadlines of the work
+assigned to the machine. This has two parts: one is a dispatcher thread, which
+handles communication with its global scheduler shard and does admission
+control; and the other is a local scheduler that prioritizes work by deadline.
+
+Admission control is pessismistc, and assumes that every process will use the
+maximum compute time. The dispatcher looks at the amount of slack each process
+has (given the original slack and how much time it has already spent waiting),
+and then judges whether a new process would still allow the machine to meet all
+the maximum compute guarantees.
 
 
-On the individual machines, the goal is to simply to meet all the deadlines of
-the work assigned to the machine. This has two parts: one is a scheduler that
-prioritizes work by deadline; and the other is a dispatcher thread, which
-handles communication with its global scheduler shard and monitors the work
-currently on the machine, ensuring that hitting all the deadlines is possible. 
+The local scheduler approximates Earliest Deadline First (EDF) scheduling.
+\sysname{} acheives EDF scheduling by using EEVDF - originally proposed in the 90s
+and recently integrated in linux - at one extreme.
 
-In order to check whether a new job would fit on the machine, the dispatcher
-looks at the slack of each process currently on the machine, as well as their
-deadlines. Because the scheduling is Earliest Deadline First (EDF), the
-dispatcher can easily understand how much slack is required of each job by
-looking at the maximum compute left on all the jobs with earlier deadlines. 
-
-
-The scheduler for the work is trying to approximate EDF, which is proven to be
-optimal at meeting deadlines (ie if a schedule exists that allows all jobs to
-meet their deadline, EDF will find it). We are able to acheive EDF scheduling by
-using EEVDF, linux' new scheduling policy, at one extreme.
+% have a figure with two processes making requests and getting time?
 
 In EEVDF, processes make requests for resources, and each request is assigned an
-eligible time and a deadline, and is guaranteed the requested resource within
-the deadline. At every scheduling point, of the eligible processes the one with
-the earliest deadline is chosen to run next. Eligible times and deadlines are in
-virtual time, which allows for oversubscription. 
+eligible time and a deadline. At every scheduling point, of the eligible
+processes the one with the earliest deadline is chosen to run next. Eligible
+times and deadlines are in virtual time, which allows for oversubscription. 
 
 Processes need to be able to be ineligible in order to maintain fairness. If a
 process ran for the last tick and completed its latest request, its next
@@ -68,16 +98,3 @@ And creating this edge condiiton is what the dispatcher does - when it spawns a
 process for a new job, it sets the requested timeslice of that job to be the
 jobs maximum compute. 
 
-\hmng{not sure if this next paragraph isn't too nitty, but if I don't have it kind 
-of all I've done is explain how it works, ie nothing that I actually had to do}
-The way linux had implemented EEVDF differed slightly from the paper: rather
-than having a request-based eligibility, processes' eligiblity was solely a
-function of how much time they had gotten compared to other processes. What this
-ended up meaning was that deadlines were effectively useless - deadlines decide
-which of two competing processes gets the cpu first, but after a single
-scheduling slice that process would have gotten more time than is stricly fair
-(half that time), so it becomes ineligible and the second process runs,
-regardless of what the respective deadlines were. 
-
-Going back to the original behavior delineated in the paper required introducing
-the notion of eligible times in the linux scheduler. 

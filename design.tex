@@ -73,8 +73,6 @@ The local scheduler approximates Earliest Deadline First (EDF) scheduling.
 \sysname{} acheives EDF scheduling by using EEVDF - originally proposed in the 90s
 and recently integrated in linux - at one extreme.
 
-% have a figure with two processes making requests and getting time?
-
 In EEVDF, processes make requests for resources, and each request is assigned an
 eligible time and a deadline. At every scheduling point, of the eligible
 processes the one with the earliest deadline is chosen to run next. Eligible
@@ -85,7 +83,8 @@ process ran for the last tick and completed its latest request, its next
 eligible time will be set to be in the future (a weighted estimation of by when
 it should have gotten the time it just did, based on its weight as well the the
 total system load). This protects against starvation of processes with longer
-deadlines.
+deadlines. Figure \ref{eevdf} shows a scheduling flow for two equally weighted
+processes.
 
 If jobs make requests often and for small time increments, this policy is
 similar to PS - each process runs for a scheduling quanta before becoming

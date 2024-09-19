@@ -2,44 +2,54 @@
 \section{Introduction}
 %-------------------------------------------------------------------------------
 
-There is a mismatch between what developers care about (latencies) and what they
-are required to give providers (resource reservations). Developers use Service
-Level Objectives (SLOs) between teams and Service Level Agreements (SLAs)
-towards customers, each of which represent promises about uptime and maximal
-latencies of the API that team/company is in charge of~\cite{awssla, cloudwatch}. 
+Developers use Service Level Objectives (SLOs) between teams and Service Level
+Agreements (SLAs) towards customers, each of which represent guarantees about
+uptime and maximal latencies of the API that team/company is in charge
+of~\cite{awssla}. Monitoring systems watch performance and page on-call
+developers if these guarantees are not being met~\cite{cloudwatch}.
 
-This mismatch is problematic on two levels: one is that the binary of
-latency-critical and best effort is a false dichotomy, and the other is that
-translating latencies into reservations is difficult. 
+Cloud-compute providers, on the other hand, have as their central metric of
+success/value utilization. The more work they can efficiently bin-pack onto
+their machines, the more money they make. The interface cloud providers offer in
+order to acheive this is well-known: latency-critical (LC) applications have
+concrete reservations, and jobs with no immediate deadline can be run as cheaper
+best-effort (BE) tasks. Cloud providers then bin-pack LC work, as well as
+schedule in BE work opportunistically. This is not a simple proposition, but
+researchers have built systems that do well at keeping utilization high, given
+enough best-effort work~\cite{caladan}.
+
+
+For a developer to translate their requirements into the cloud providers'
+interface requires two steps: pick a category (LC or BE), and if the its the
+former, generate a concrete reservation. Both of these steps are lossy: some
+work might not be completely LC or BE, and reservations require the developer to
+make estimations about peak load, and in fact incentivizes them to
+overestimate~\cite*{overprovision} --- directly in opposition of the cloud
+providers goals.
 
 Imagine a web developer, whose website has four different types of work it has
 to do: \\
-(1) load static pages (eg the homepage) - shortest and very time ciritcal \\
-(2) load dynamic pages (eg a users profile page) - slightly longer and less time
-critcial \\
-(3) foreground data processing (eg processing a user uploaded file of image) -
-require a fair amount of processing but is still user-facing and thus latency sensitive \\
-(4) background data processing (eg updating a data warehouse) - run overnight
+(1) load static pages (eg the homepage) --- shortest and very time critical \\
+(2) load dynamic pages (eg a users profile page) --- slightly longer and less
+time critcial \\
+(3) foreground data processing (eg processing a user uploaded file of image) ---
+require a fair amount of processing but is still user-facing and thus latency
+sensitive \\
+(4) background data processing (eg updating a data warehouse) --- run overnight
 and just needs to finish by morning.
 
-The only candidate for true best effort work is (4), and even that will pose a
-problem if it's not done by the time business picks up the next day. For the
-other three, the translation to a reservation system then happens offline, and
-requires the developer to make estimations about peak load as well as how much
-they are willing to let latencies spike (for example, (3) might be fine to run a
-bit slower when load is high but (1) should remain completely impervious to load
-spikes). This estimation process also incentivizes the developer to overestimate
-- low utilization is much less of a problem to them than missing deadlines~\cite*{overprovision}. 
+The only candidate for best effort work is (4) (even that needs to be done by
+the time business picks up the next day). The other three are user-facing and as
+such require latency-critical and require reservations. How much these
+reservations are over-provisioned will reflect the developers interest in
+keeping low latency: it is critical that the homepage load time be constant,
+whereas processing a user upload might be fine to take more time at high load.
 
-This in turn poses a problem for providers, for whom high utilization means more
-work they are able to run and thus more money. Bin-packing latency critical
-work, as well as scheduling in best effort work opportunistically to use
-resources guaranteed to latency critical jobs in time that they might not be
-using it, is a hard problem that many systems work on.
-
-This submission presents \textit{\sysname}, a SLA-based scheduling system that
-avoids the problem alltogether. Rather than deal with the lossy metric of
-reservations and the false binary of latency critcial and best effort,
-\sysname{} creates a spectrum of criticality. It does this by making deadline
-and maximum compute time the central scheduling mechanism.\hmng{don't love this
-sentence yet, I'd like to bring it to a point but this isn't quite it}
+Central to \textit{\sysname{}} is the observation that the original priorities
+of utilization and latency don't have to be opposing. Rather than fighting the
+symptom of underutilization caused by overprovisioning, \sysname{} changes the
+interface.\ \sysname{} makes deadlines and maximum compute times the central
+scheduling mechanism, thereby side-stepping the LC/BE binary and making the
+developers requirements explicit to the scheduler. The cloud provider can use
+the information of how long a process will run to make better placement
+decisions.

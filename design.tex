@@ -6,11 +6,10 @@
     \centering
     \includegraphics[height=1.5in]{img/eevdf.png}
     \caption{An example EEVDF timeline. Arrows represent requests, denoted with time eligible and deadline, 
-        and boxes showing which process is chosen to run. }
-    \label{eevdf}
+        and boxes showing which process is chosen to run. }\label{eevdf}
 \end{figure}
 
-\begin{figure*}[h!]
+\begin{figure*}[ht!]
     \centering
     \begin{subfigure}[t]{0.5\textwidth}
         \centering
@@ -83,7 +82,7 @@ process ran for the last tick and completed its latest request, its next
 eligible time will be set to be in the future (a weighted estimation of by when
 it should have gotten the time it just did, based on its weight as well the the
 total system load). This protects against starvation of processes with longer
-deadlines. Figure \ref{eevdf} shows a scheduling flow for two equally weighted
+deadlines. Figure~\ref{eevdf} shows a scheduling flow for two equally weighted
 processes.
 
 If jobs make requests often and for small time increments, this policy is

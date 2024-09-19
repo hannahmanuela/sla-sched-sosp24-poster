@@ -5,8 +5,8 @@
 There is a mismatch between what developers care about (latencies) and what they
 are required to give providers (resource reservations). Developers use Service
 Level Objectives (SLOs) between teams and Service Level Agreements (SLAs)
-towards customers, each of which represent promises about maximal latencies of
-the API that team/company is in charge of (add citations). 
+towards customers, each of which represent promises about uptime and maximal
+latencies of the API that team/company is in charge of~\cite{awssla, cloudwatch}. 
 
 This mismatch is problematic on two levels: one is that the binary of
 latency-critical and best effort is a false dichotomy, and the other is that
@@ -29,7 +29,7 @@ requires the developer to make estimations about peak load as well as how much
 they are willing to let latencies spike (for example, (3) might be fine to run a
 bit slower when load is high but (1) should remain completely impervious to load
 spikes). This estimation process also incentivizes the developer to overestimate
-- low utilization is much less of a problem to them than missing deadlines. 
+- low utilization is much less of a problem to them than missing deadlines~\cite*{overprovision}. 
 
 This in turn poses a problem for providers, for whom high utilization means more
 work they are able to run and thus more money. Bin-packing latency critical

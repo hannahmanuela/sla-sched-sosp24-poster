@@ -45,8 +45,9 @@ reservations are over-provisioned will reflect the developers interest in
 keeping low latency: it is critical that the homepage load time be constant,
 whereas processing a user upload might be fine to take more time at high load.
 
-Central to \textit{\sysname{}} is the observation that the original priorities
-of utilization and latency don't have to be opposing. Rather than fighting the
+This submission presents \textit{\sysname}, a SLA-based scheduling system.
+Central to \sysname{} is the observation that the original priorities of
+utilization and latency don't have to be opposing. Rather than fighting the
 symptom of underutilization caused by overprovisioning, \sysname{} changes the
 interface.\ \sysname{} makes deadlines and maximum compute times the central
 scheduling mechanism, thereby side-stepping the LC/BE binary and making the

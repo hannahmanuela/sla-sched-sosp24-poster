@@ -2,13 +2,13 @@
 \section{Current State}
 %-------------------------------------------------------------------------------
 
-Implementing this design required changing linux slightly. Linux's EEVDF
-scheduler has a strong tenant of avoiding unfairness, and as a result implements
-eligibility solely as a function of how much time a process had gotten compared
-to other processes. This means that (assuming equally weighted processes), after
-a tick of running, a process becomes ineligible, because it got more time that
-it should have (in an ideal system the tick would have been shared equally among
-all processes).
+Implementing this design required changing linux's EEVDF implementation
+slightly. Linux's EEVDF scheduler has a strong tenant of avoiding unfairness,
+and as a result implements eligibility solely as a function of how much time a
+process had gotten compared to other processes. This means that (assuming
+equally weighted processes), after a tick of running, a process becomes
+ineligible, because it got more time that it should have (in an ideal system the
+tick would have been shared equally among all processes).
 
 In \sysname, however, being able to be unfair for long periods of time is key:
 jobs with short deadlines need to get absolute priority over jobs that have

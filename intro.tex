@@ -8,33 +8,29 @@ uptime and maximal latencies of the API that team/company is in charge
 of~\cite{awssla}. Monitoring systems watch performance and page on-call
 developers if these guarantees are not being met~\cite{cloudwatch}.
 
-Cloud-compute providers, on the other hand, have as their central metric of
-value utilization. The more work they can pack onto their machines, the more
-money they make. The interface many frameworks, such as Kubernetes, offer in
-order to achieve this gives developers two options: latency-critical (LC)
-applications have concrete reservations, and jobs with no immediate deadline can
-be run as cheaper best-effort (BE) tasks. The scheduler bin-packs LC work, and
-schedules in BE work opportunistically. This is not a simple proposition, but
-researchers have built systems that do well at keeping utilization high, given
-enough best-effort work~\cite{caladan}.
+On the other hand, the interface to many scheduling frameworks, such as
+Kubernetes or other research systems~\cite{caladan}, offers developers two
+options: latency-critical (LC) applications have concrete reservations, and jobs
+with no immediate deadline can be run as cheaper best-effort (BE) tasks. The
+scheduler bin-packs LC work, and schedules in BE work opportunistically.
 
 
-For a developer to translate their requirements into the cloud providers'
-interface requires two steps: pick a category (LC or BE), and if the its the
-former, generate a concrete reservation. Both of these steps are difficult: some
-work might not be completely LC or BE, and reservations require the developer to
-make estimations about peak load, and in fact incentivizes them to
-overestimate~\cite*{overprovision} --- directly in opposition of the cloud
-providers goals.
+For a developer to translate their requirements into this interface requires two
+steps: pick a category (LC or BE), and if the its the former, generate a
+concrete reservation. Both of these steps are difficult: some work might not be
+completely LC or BE, and reservations require the developer to make estimations
+about peak load, and in fact incentivizes them to
+overestimate~\cite*{overprovision} --- making maintaining high utilization even
+harder.
 
 Imagine a web developer, whose website has four different types of work it has
 to do: \\
-(1) load static pages (eg the homepage) --- shortest and very time critical \\
+(1) load static pages (eg the homepage) --- shortest and very time critical; 
 (2) load dynamic pages (eg a users profile page) --- slightly longer and less
-time critcial \\
+time critcial;
 (3) foreground data processing (eg processing a user uploaded file of image) ---
 requires a fair amount of processing but still user-facing and thus latency
-sensitive \\
+sensitive;
 (4) background data processing (eg updating a data warehouse) --- runs overnight
 and just needs to finish by morning.
 
@@ -45,17 +41,16 @@ is critical that the homepage load time be low and constant, whereas processing
 a user upload might be fine to take more time during high load.
 
 This submission presents \textit{\sysname}, a SLA-based scheduling system.
-Central to \sysname{} is the observation that the original priorities of
-utilization and latency don't have to be opposing. In order to help align
-incentives, \sysname{} changes the interface with which resource requirements
-are communicated: \sysname{} makes deadlines and maximum compute times the
-central scheduling mechanism.\ \sysname{} thereby side-steps the LC/BE binary,
-and makes the developer's requirements explicit to the scheduler. The cloud
-provider can use the information of how long a process will run to make better
-placement decisions.
+Central to \sysname{} is the observation that the priorities of utilization and
+latency don't have to be opposing.\ \sysname{} changes the interface with which
+resource requirements are communicated: it makes \textit{deadlines} and
+\textit{maximum compute times} the central metrics provided, thereby
+side-stepping the LC/BE binary, and making the developer's requirements explicit
+to the scheduler. The scheduler can use the information of how long a process
+will run to make better placement decisions.
 
-In \sysname{}, developers submit jobs, attached with the \textit{maximum
-execution time} as well as a \textit{deadline}. In the website example, rather
-than estimate load for each job, the resources required to run it, then add 20\%
-padding, developers can simply give the scheduler the handler for each endpoint,
-and attach to each its deadline and an experiential maximum compute time.
+In \sysname{}, developers submit jobs, attached with the maximum execution time
+as well as a deadline. In the website example, rather than estimate load for
+each job, the resources required to run it, then add 20\% padding, developers
+can simply give the scheduler the handler for each endpoint, and attach to each
+its deadline and an experiential maximum compute time.

@@ -1,9 +1,9 @@
 \section{Related Work}
 
-There is a large body of work that focusses on removing the need for
+There is a large body of work that focuses on removing the need for
 reservations by creating elastic reservations that automatically scale up and
 down with load~\cite*{kubernetes, snowflake}. These systems generally
-operate on a much larger timescale (control loops on the order of manys
+operate on a much larger timescale (control loops on the order of many
 seconds~\cite{kubernetestime}), and still work within the best effort
 - latency critical binary. 
 
@@ -11,7 +11,7 @@ There are systems that focus on increasing utilization via much more
 fine-grained preemption behavior~\cite*{caladan, shinjuku}. These require
 building a kernel-bypass scheduler. 
 
-Other work does operate on the basis of deadlines, but take different appproach
+Other work does operate on the basis of deadlines, but take different approach
 to realizing those deadlines. Some try to formally pre-compute compute time to
 make guarantees~\cite{jockey}, while others use the deadline to generate a
 reservation~\cite*{rayon}. Morpheus~\cite*{morpheus} targets jobs with

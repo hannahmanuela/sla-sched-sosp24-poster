@@ -30,7 +30,7 @@ of the global scheduler, which then forwards the job to a chosen single machine.
 Each global scheduler shard has a set of machines that it can run jobs on. The
 goal of the global scheduler is to keep load as evenly distributed among these
 machines as possible, in the sense that each machine has a maximally
-heterogenous set of deadlines and computes. This allows processes with more
+heterogeneous set of deadlines and computes. This allows processes with more
 \textit{slack} (difference between deadline and max compute) to fill in gaps
 where shorter processes might have finished earlier than expected (similarly to
 how best effort work now opportunistically uses resources not currently used by
@@ -56,14 +56,14 @@ the maximum compute guarantees.
 
 
 The local scheduler approximates Earliest Deadline First (EDF) scheduling.
-\sysname{} acheives EDF scheduling by using Earliest Eligible Virtual Deadline
+\sysname{} achieves EDF scheduling by using Earliest Eligible Virtual Deadline
 First (EEVDF)~\cite{eevdf} --- originally proposed in the 90s and recently
 integrated in linux~\cite{linuxeevdf}.
 
 In EEVDF, processes make requests for resources, and each request is assigned an
 eligible time and a deadline. At every scheduling point, of the eligible
 processes the one with the earliest deadline is chosen to run next. Eligible
-times and deadlines are in virtual time, which allows for oversubscription. 
+times and deadlines are in virtual time, which allows for oversubscribing. 
 
 \begin{figure}[t!]
     \centering
@@ -87,11 +87,11 @@ similar to Process Sharing (PS) --- each process runs for a scheduling quanta
 before becoming ineligible. However, on the other extreme you get behavior
 closer to EDF --- if jobs only ever make one request for all the resources that
 they think they will need, then the requests never reset and all processes are
-always elgibible. Since the EEVDF scheduler is by definition choosing the
+always eligible. Since the EEVDF scheduler is by definition choosing the
 eligible process with the earliest deadline (and all processes are always
 eligible), it is effectively implementing EDF.
 
-And creating this edge condiiton is what the dispatcher does --- when it spawns
+And creating this edge condition is what the dispatcher does --- when it spawns
 a process for a new job, it sets the requested timeslice of that job to be the
 jobs maximum compute. 
 

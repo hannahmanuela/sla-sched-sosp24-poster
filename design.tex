@@ -48,10 +48,10 @@ assigned to the machine. This has two parts: one is a dispatcher thread, which
 handles communication with its global scheduler shard and does admission
 control; and the other is a local scheduler that prioritizes work by deadline.
 
-\sysname{}'s admission control is pessismistc, and assumes that every process will use the
-maximum compute time. The dispatcher looks at the amount of slack each process
-has (given the original slack and how much time it has already spent waiting),
-and then judges whether a new process would still allow the machine to meet all
+\sysname{}'s admission control is pessimistic, and assumes that every process
+will use the maximum compute time. The dispatcher looks at the amount of slack
+each process has (given the original slack and how much time it has already
+spent waiting), and judges whether with the new process it could still meet all
 the maximum compute guarantees.
 
 

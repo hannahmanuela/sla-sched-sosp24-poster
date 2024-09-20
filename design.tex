@@ -22,11 +22,12 @@
 \end{figure*}
 
 Developers submit jobs, attached with the maximum execution time as well as a
-deadline. 
+deadline. In the website example, rather than estimate load for each job, the
+resources required to run it, then add 20\% padding, developers can simply give
+the scheduler the deadline, along with an experiential maximum compute time.
 
-When a job is run, it is initially routed to the relevant shard of the
-\textit{global scheduler}, which then forwards the job to a chosen
-single machine. 
+When a job needs to be run, \sysname{} initially routes it to the relevant shard
+of the global scheduler, which then forwards the job to a chosen single machine. 
 
 
 \subsection*{Distributed Global Scheduler}

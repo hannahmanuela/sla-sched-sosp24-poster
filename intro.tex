@@ -10,13 +10,13 @@ developers if these guarantees are not being met~\cite{cloudwatch}.
 
 Cloud-compute providers, on the other hand, have as their central metric of
 value utilization. The more work they can pack onto their machines, the more
-money they make. The interface cloud providers offer in order to acheive this is
-well-known: latency-critical (LC) applications have concrete reservations, and
-jobs with no immediate deadline can be run as cheaper best-effort (BE) tasks.
-Cloud providers then bin-pack LC work, and schedule in BE work
-opportunistically. This is not a simple proposition, but researchers have built
-systems that do well at keeping utilization high, given enough best-effort
-work~\cite{caladan}.
+money they make. The interface many frameworks, such as Kubernetes, offer in
+order to achieve this gives developers two options: latency-critical (LC)
+applications have concrete reservations, and jobs with no immediate deadline can
+be run as cheaper best-effort (BE) tasks. The scheduler bin-packs LC work, and
+schedules in BE work opportunistically. This is not a simple proposition, but
+researchers have built systems that do well at keeping utilization high, given
+enough best-effort work~\cite{caladan}.
 
 
 For a developer to translate their requirements into the cloud providers'
@@ -49,7 +49,13 @@ Central to \sysname{} is the observation that the original priorities of
 utilization and latency don't have to be opposing. In order to help align
 incentives, \sysname{} changes the interface with which resource requirements
 are communicated: \sysname{} makes deadlines and maximum compute times the
-central scheduling mechanism. \sysname{} thereby side-steps the LC/BE binary,
+central scheduling mechanism.\ \sysname{} thereby side-steps the LC/BE binary,
 and makes the developer's requirements explicit to the scheduler. The cloud
 provider can use the information of how long a process will run to make better
 placement decisions.
+
+In \sysname{}, developers submit jobs, attached with the \textit{maximum
+execution time} as well as a \textit{deadline}. In the website example, rather
+than estimate load for each job, the resources required to run it, then add 20\%
+padding, developers can simply give the scheduler the handler for each endpoint,
+and attach to each its deadline and an experiential maximum compute time.
